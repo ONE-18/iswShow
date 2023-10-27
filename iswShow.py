@@ -4,8 +4,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
-contraseña = "juan6102."
-manual = False
+contraseña = ""
+auto = False
 
 class MenuApp(Gtk.Application):
     def __init__(self):
@@ -31,20 +31,27 @@ class MenuApp(Gtk.Application):
 
             button1 = Gtk.Button(label="boost on")
             button1.connect("clicked", self.on_command1_clicked)
-            button1.connect("clicked", self.set_manual, True)
             grid.attach(button1, 0, 0, 1, 1)
 
             button2 = Gtk.Button(label="boost off")
             button2.connect("clicked", self.on_command2_clicked)
-            button2.connect("clicked", self.set_manual, False)
             grid.attach(button2, 1, 0, 1, 1)
 
             self.label = Gtk.Label()
             self.label.set_hexpand(True)
             self.label.set_vexpand(True)
-            self.label.set_xalign(0.5)
+            self.label.set_xalign(0)
             self.label.set_yalign(0.5)
             grid.attach(self.label, 0, 1, 2, 1)
+            
+            self.checkbox = Gtk.CheckButton(label="Auto")
+            self.checkbox.connect("toggled", self.set_manual)
+            grid.attach(self.checkbox, 0, 2, 1, 1)
+            
+            self.entry1 = Gtk.Entry()
+            grid.attach(self.entry1, 1, 1, 1, 1)
+            self.entry2 = Gtk.Entry()
+            grid.attach(self.entry2, 1, 2, 1, 1)
 
             GLib.timeout_add_seconds(1, self.update_output, None)
             
@@ -62,16 +69,20 @@ class MenuApp(Gtk.Application):
         resultado = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, text=True)
         self.update_output(resultado.stdout)
         
+    def autoFunction(self,temperature):
+        if(temperature > 60):
+            self.on_command1_clicked(None)
+        if(temperature < 35):
+            self.on_command2_clicked(None)
+    
     def get_cpu_temperature(self):
+        global auto
         try:
             # Obtener la temperatura del CPU (este comando puede variar según tu sistema)
             result = subprocess.run(["cat", "/sys/class/thermal/thermal_zone0/temp"], stdout=subprocess.PIPE, text=True)
             temperature = float(result.stdout.strip()) / 1000  # Convertir a grados Celsius
-            if not manual:
-                if(temperature > 60):
-                    self.on_command1_clicked(None)
-                if(temperature < 35):
-                    self.on_command2_clicked(None)
+            if auto:
+                self.autoFunction(temperature)
             return f"CPU: {temperature:.1f}°C"
         except Exception as e:
             return f"Error when obtaining temperature: {str(e)}"
@@ -82,9 +93,12 @@ class MenuApp(Gtk.Application):
         self.label.set_text(output)
         return True
     
-    def set_manual(inp):
-        global manual
-        manual = inp
+    def set_manual(self, button):
+        global auto
+        if button.get_active():
+            auto = True
+        else:
+            auto = False
         
 if __name__ == "__main__":
     app = MenuApp()
