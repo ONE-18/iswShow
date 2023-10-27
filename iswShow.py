@@ -5,12 +5,11 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
 contraseña = ""
-auto = False
+manual = False
 
 class MenuApp(Gtk.Application):
     def __init__(self):
         global contraseña
-        contraseña = "juan6102."
         super(MenuApp, self).__init__(application_id="org.example.menuapp")
         self.window = None
         self.label = Gtk.Label()
